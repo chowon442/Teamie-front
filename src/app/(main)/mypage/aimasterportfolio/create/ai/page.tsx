@@ -16,7 +16,11 @@ const AI_CREATE_STEPS = [
     title: '개인 회고 작성',
     buttons: {
       sub: '개인 회고로 이동',
-      main: <span className="font-[Pretendard] font-bold text-[18px] leading-[26px] text-center w-full">다음으로 →</span>,
+      main: (
+        <span className="font-[Pretendard] font-bold text-[18px] leading-[26px] text-center w-full">
+          다음으로 →
+        </span>
+      ),
     },
   },
   {
@@ -24,7 +28,11 @@ const AI_CREATE_STEPS = [
     title: '회의록 선택',
     buttons: {
       sub: '← 이전으로',
-      main: <span className="font-[Pretendard] font-bold text-[18px] leading-[26px] text-center w-full">다음으로 →</span>,
+      main: (
+        <span className="font-[Pretendard] font-bold text-[18px] leading-[26px] text-center w-full">
+          다음으로 →
+        </span>
+      ),
     },
   },
   {
@@ -32,7 +40,11 @@ const AI_CREATE_STEPS = [
     title: '추가 질문',
     buttons: {
       sub: '임시저장',
-      main: <span className="font-[Pretendard] font-bold text-[18px] leading-[26px] text-center w-full">AI 마스터 포트폴리오 생성하기</span>,
+      main: (
+        <span className="font-[Pretendard] font-bold text-[18px] leading-[26px] text-center w-full">
+          AI 마스터 포트폴리오 생성하기
+        </span>
+      ),
     },
   },
 ];
@@ -88,11 +100,7 @@ export default function AIMasterPortfolioCreatePage() {
                     {currentStep === 2 && <Step3 />}
                   </div>
                   <Image
-<<<<<<< HEAD
-                    className="absolute top-[0] left-[-6px] translate-x-[-50%] translate-y-[50%] "
-=======
                     className="absolute top-[0] left-[-6px] translate-x-[-50%] translate-y-[50%]"
->>>>>>> dev
                     src="/icons/spike-left.svg"
                     alt="spike-left"
                     width={30}
@@ -108,11 +116,7 @@ export default function AIMasterPortfolioCreatePage() {
                     className="rounded-[6px] border-[1.5px] border-[#898989] bg-[#FFF] p-[6px] px-[32px] cursor-pointer"
                     onClick={() => {
                       if (currentStep === 0) {
-<<<<<<< HEAD
-                        router.push('/mypage/`/projects/${projectId}/retrospect/ai`');
-=======
-                        router.push('/mypage/`/projects/${projectId}/retrospect`');
->>>>>>> dev
+                        router.push('/projects/1/retrospect');
                       } else {
                         goToStep(currentStep - 1);
                       }
@@ -123,7 +127,6 @@ export default function AIMasterPortfolioCreatePage() {
                   <button
                     className="rounded-[6px] border-[1px] border-[#81D7D4] bg-[#81D7D4] p-[6px] px-[32px] text-[#FFF] cursor-pointer"
                     onClick={() => {
-                    
                       if (currentStep === 2) {
                         router.push('/mypage/aimasterportfolio/final');
                       } else {
