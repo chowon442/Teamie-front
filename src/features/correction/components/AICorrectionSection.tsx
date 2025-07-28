@@ -8,7 +8,7 @@ import ConcretizationMark from './ConcretizationMark';
 import TailoredDropdown from './TailoredDropdown';
 
 interface LineReview {
-  line_number: number;
+  line_number: string;
   original_content: string;
   type: 0 | 1 | 2;
   review_comment: string | null;
@@ -18,6 +18,7 @@ interface AICorrectionSectionProps {
   title: string;
   content: string;
   reviewResults?: LineReview[];
+  fieldSummary?: string;
   category?: string;
   contribution?: number;
   initialReductionToggle?: boolean;
@@ -28,6 +29,7 @@ const AICorrectionSection = ({
   title,
   content,
   reviewResults = [],
+  fieldSummary,
   category = '프로젝트',
   contribution = 80,
   initialReductionToggle = false,
@@ -36,8 +38,10 @@ const AICorrectionSection = ({
   const [toggleROn, setRToggleOn] = useState(initialReductionToggle);
   const [toggleCOn, setCToggleOn] = useState(initialConcretizationToggle);
 
-  // 컨텐츠를 라인별로 분리
-  const contentLines = content.split('\n').filter((line) => line.trim() !== '');
+  // 컨텐츠를 라인별로 분리 (- 시작 라인만 필터링)
+  const contentLines = content
+    .split('\n')
+    .filter((line) => line.trim() !== '' && line.trim().startsWith('-'));
 
   // 첨삭 코멘트 수집
   const reductionComments = reviewResults
@@ -48,15 +52,15 @@ const AICorrectionSection = ({
     .filter((review) => review.type === 2 && review.review_comment)
     .map((review) => review.review_comment!);
 
-  // 라인별 첨삭 타입을 매핑하는 함수
-  const getLineType = (lineIndex: number): 0 | 1 | 2 => {
-    const review = reviewResults.find((r) => r.line_number === lineIndex + 1);
+  // 라인별 첨삭 타입을 매핑하는 함수 (original_content 직접 비교)
+  const getLineType = (line: string): 0 | 1 | 2 => {
+    const review = reviewResults.find((r) => r.original_content === line.trim());
     return review ? review.type : 0;
   };
 
   // 라인 렌더링 함수
   const renderContentLine = (line: string, index: number) => {
-    const lineType = getLineType(index);
+    const lineType = getLineType(line);
     const shouldHighlight = (toggleROn && lineType === 1) || (toggleCOn && lineType === 2);
 
     // 하이라이트 배경색 결정
@@ -129,7 +133,12 @@ const AICorrectionSection = ({
           <div className="w-[620px] max-lg:w-full">
             {/* 총평 */}
             <div className="w-full min-h-[84px] bg-[#F8F8F8] border border-[#898989] rounded-[6px] px-[20px] py-[16px] mb-[48px]">
-              <div className="text-[16px] text-[#666666] mb-[8px]">총평</div>
+              <div className="text-[16px] text-[#666666] mb-[8px]">필드별 총평</div>
+              {fieldSummary ? (
+                <div className="text-[14px] text-[#333333] leading-relaxed mb-[12px]">
+                  {fieldSummary}
+                </div>
+              ) : null}
               <div className="text-[14px] text-[#888888] space-y-1">
                 <p>• Type 0 (유지): {reviewResults.filter((r) => r.type === 0).length}개 라인</p>
                 <p>
