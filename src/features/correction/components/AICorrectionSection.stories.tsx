@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react';
-import { fn } from '@storybook/test';
+import type { ComponentProps } from 'react';
 import AICorrectionSection from './AICorrectionSection';
 
 // 실제 마스터 포트폴리오 데이터
@@ -76,6 +76,72 @@ const detailInfoReviewResults = [
     review_comment: null,
   },
 ];
+
+// 사용자가 JSON을 입력해 미리보기할 수 있도록 하는 유틸리티
+type SectionKey = 'detailInfo' | 'assignedTasks' | 'keyAchievements' | 'insights';
+
+interface LineReview {
+  line_number: string;
+  original_content: string;
+  type: 0 | 1 | 2;
+  review_comment: string | null;
+}
+
+interface SectionData {
+  lines: LineReview[];
+  field_summary?: string;
+}
+
+interface InputJson {
+  detailInfo?: SectionData;
+  assignedTasks?: SectionData;
+  keyAchievements?: SectionData;
+  insights?: SectionData;
+}
+
+type ExtraArgs = { section?: SectionKey; inputJson?: InputJson };
+type StoryArgs = ComponentProps<typeof AICorrectionSection> & ExtraArgs;
+
+const SECTION_TITLES: Record<SectionKey, string> = {
+  detailInfo: '상세정보',
+  assignedTasks: '담당 업무',
+  keyAchievements: '주요 성과',
+  insights: '배운 점',
+};
+
+const FIELD_SUMMARIES_FALLBACK: Record<SectionKey, { summary: string; contribution: number }> = {
+  detailInfo: {
+    summary:
+      "프로젝트 배경과 목표 설정은 글로벌 MD 직무와 연결점이 많습니다. '문화 이해도'를 '글로벌 시장 및 팬덤 문화 이해'로 구체화하세요. 수치 기반 목표 설정을 레진코믹스의 '데이터 기반 운영'과 연결하여 강조하세요. '기업 연계 프로그램' 기획 경험을 '신규 파트너사 발굴 및 협업' 역량으로 발전시키세요.",
+    contribution: 90,
+  },
+  assignedTasks: {
+    summary:
+      "담당 업무가 글로벌 MD의 운영 관리 업무와 잘 맞는 구조를 보여줍니다. '회계 관리' 경험을 'ERP를 활용한 매출 정산' 능력으로 구체화하세요. '기획안 작성' 경험을 'Excel, PowerPoint를 활용한 사업 계획 및 성과 보고' 역량으로 강조하세요. 문제 해결 과정을 '팬덤 니즈 분석 및 IP 기반 상품 기획' 사례로 재구성하세요.",
+    contribution: 85,
+  },
+  keyAchievements: {
+    summary:
+      "정량적 성과 제시는 우수하나 웹툰 IP 비즈니스와의 연관성 강화가 필요합니다. '참여율 증가'를 '팬덤 확장 및 참여도 증진' 관점에서 재해석하세요. '특별 프로그램 성공' 사례를 '특정 타겟을 노린 MD 상품 기획 및 판매 성공' 사례로 연결하세요. '기업 연계' 성과를 '신규 유통 채널 확보' 또는 '파트너십 구축'의 관점에서 서술하세요.",
+    contribution: 95,
+  },
+  insights: {
+    summary:
+      "전반적으로 프로젝트 관리와 문제 해결 역량은 잘 드러나지만 글로벌 비즈니스 인사이트가 부족합니다. '프로젝트 관리' 역량을 '글로벌 MD 상품의 기획-생산-유통 전 과정 관리' 능력으로 확장시키세요. 'Plan B' 경험을 '해외 수출입 과정의 리스크(통관, 물류 등) 관리' 능력으로 구체화하세요. '외부 파트너십'에 대한 포부를 '레진코믹스 IP를 활용한 신규 글로벌 시장 개척' 계획으로 발전시키세요.",
+    contribution: 75,
+  },
+};
+
+function buildPropsFromJson(data: InputJson, section: SectionKey) {
+  const sec = data?.[section];
+  if (!sec || !Array.isArray(sec.lines)) {
+    throw new Error('선택한 섹션 데이터가 올바르지 않습니다.');
+  }
+  const content = sec.lines.map((l) => l.original_content).join('\n');
+  const reviewResults = sec.lines as LineReview[];
+  const fieldSummary = sec.field_summary ?? '';
+  return { title: SECTION_TITLES[section], content, reviewResults, fieldSummary };
+}
 
 // assignedTasks 섹션
 const assignedTasksReviewResults = [
@@ -212,7 +278,7 @@ const insightsReviewResults = [
   },
 ];
 
-const meta: Meta<typeof AICorrectionSection> = {
+const meta: Meta<StoryArgs> = {
   title: 'Features/Correction/AICorrectionSection',
   component: AICorrectionSection,
   parameters: {
@@ -280,11 +346,11 @@ AI 포트폴리오 첨삭 시스템 컴포넌트입니다. 채용 전문가이�
       description: '섹션 제목',
     },
     content: {
-      control: 'text',
+      control: { type: 'text', disable: true },
       description: '포트폴리오 원본 내용',
     },
     reviewResults: {
-      control: 'object',
+      control: { type: 'object', disable: true },
       description: 'AI 첨삭 결과 데이터',
     },
     contribution: {
@@ -298,6 +364,16 @@ AI 포트폴리오 첨삭 시스템 컴포넌트입니다. 채용 전문가이�
     initialConcretizationToggle: {
       control: 'boolean',
       description: '구체화/강조 토글 초기 상태',
+    },
+    section: {
+      control: { type: 'select' },
+      options: ['detailInfo', 'assignedTasks', 'keyAchievements', 'insights'],
+      description: '미리볼 섹션 선택',
+    },
+    inputJson: {
+      control: 'object',
+      description:
+        '아래 형식의 JSON을 붙여넣으면 해당 섹션을 렌더링합니다. { detailInfo|assignedTasks|keyAchievements|insights: { lines: [...], field_summary: "..." } }',
     },
   },
   args: {
@@ -314,17 +390,71 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
-  args: {},
+  args: {
+    section: 'detailInfo',
+    inputJson: undefined,
+  },
+  render: (args) => {
+    // JSON 입력을 우선 사용, 없거나 파싱 실패 시 섹션별 더미 데이터로 폴백
+    let title = SECTION_TITLES[args.section as SectionKey];
+    let content = masterPortfolio.detailInfo;
+    let reviewResults = detailInfoReviewResults as LineReview[];
+    let fieldSummary = FIELD_SUMMARIES_FALLBACK[args.section as SectionKey].summary;
+    let contribution = FIELD_SUMMARIES_FALLBACK[args.section as SectionKey].contribution;
+
+    try {
+      if (args.inputJson) {
+        const props = buildPropsFromJson(args.inputJson as InputJson, args.section as SectionKey);
+        title = props.title;
+        content = props.content;
+        reviewResults = props.reviewResults;
+        fieldSummary = props.fieldSummary;
+      } else {
+        // 섹션별 기본 데이터 선택
+        switch (args.section as SectionKey) {
+          case 'detailInfo':
+            content = masterPortfolio.detailInfo;
+            reviewResults = detailInfoReviewResults as LineReview[];
+            break;
+          case 'assignedTasks':
+            content = masterPortfolio.assignedTasks;
+            reviewResults = assignedTasksReviewResults as LineReview[];
+            break;
+          case 'keyAchievements':
+            content = masterPortfolio.keyAchievements;
+            reviewResults = keyAchievementsReviewResults as LineReview[];
+            break;
+          case 'insights':
+            content = masterPortfolio.insights;
+            reviewResults = insightsReviewResults as LineReview[];
+            break;
+        }
+      }
+    } catch (e) {
+      // 파싱 오류 시 폴백 유지
+      console.warn('입력 JSON 파싱 오류: ', e);
+    }
+
+    return (
+      <AICorrectionSection
+        title={title}
+        content={content}
+        reviewResults={reviewResults}
+        fieldSummary={fieldSummary}
+        contribution={args.contribution ?? contribution}
+        initialReductionToggle={args.initialReductionToggle}
+        initialConcretizationToggle={args.initialConcretizationToggle}
+      />
+    );
+  },
   parameters: {
     docs: {
       description: {
-        story: `실제 마스터 포트폴리오의 **상세정보** 섹션입니다. 
+        story: `이 스토리는 사용자가 JSON을 직접 입력하여 미리볼 수 있도록 구성되었습니다. 
 
-**AI 첨삭 필드별 총평:**
-프로젝트 배경과 목표 설정은 글로벌 MD 직무와 연결점이 많습니다. '문화 이해도'를 '글로벌 시장 및 팬덤 문화 이해'로 구체화하세요. 수치 기반 목표 설정을 레진코믹스의 '데이터 기반 운영'과 연결하여 강조하세요. '기업 연계 프로그램' 기획 경험을 '신규 파트너사 발굴 및 협업' 역량으로 발전시키세요.
-
-**Type 분포 (0/1/2): 2/1/2**
-토글을 클릭하여 텍스트 라인에 하이라이트가 적용되는 것을 확인할 수 있습니다.`,
+1) 우측 Controls의 section으로 섹션을 선택하세요. 
+2) inputJson 컨트롤에 JSON을 붙여넣으면 해당 데이터로 렌더링됩니다. 
+3) 미입력/에러 시 섹션별 기본 예시 데이터로 표시됩니다.`,
       },
     },
   },
